@@ -1,8 +1,8 @@
-const express  = require('express')
+const express = require('express')
 const app = express();
 const cors = require('cors');
 require('dotenv').config()
-const port= process.env.PORT || 5000;
+const port = process.env.PORT || 5000;
 
 // middleware
 app.use(cors());
@@ -27,29 +27,51 @@ async function run() {
     await client.connect();
 
     const database = client.db("Boro-Bazar").collection("Items");
-
-    app.get('/items',async(req,res)=>{
-        const result = await database.find().toArray();
-        res.send(result)
+    const myCartDB = client.db("Boro-Bazar").collection("CartItems");
+    //get methods
+    app.get('/items', async (req, res) => {
+      const result = await database.find().toArray();
+      res.send(result)
     })
-
-    app.get('/:id', async(req, res)=>{
+    //single item detail 
+    app.get('/:id', async (req, res) => {
       const id = req.params.id;
-      const query = {_id: new ObjectId(id)}
+      const query = { _id: new ObjectId(id) }
       const result = await database.findOne(query);
       res.send(result)
     })
+    //my cart info
+    app.get('/cart', async(req, res)=>{
+      const result = await myCartDB.find().toArray();
+      res.send(result)
+    })
 
+  //   app.get('/cartItems', async(req, res)=>{
+  //     const email = req.query.email;
+  //         let query ={};
+  //         if(req.query?.email){
+  //             query={email: email}
+  //         }
+  //     const result = await myCartDB.find(query).toArray();
+  //     res.send(result)
+  // })
 
+    
 
 
     //post methods
-
-    app.post('/addItem', async(req, res)=>{
+    //Sell Items
+    app.post('/addItem', async (req, res) => {
       const newItem = req.body;
       const result = await database.insertOne(newItem);
       res.send(result)
-  })
+    })
+    //Add to cart
+    app.post('/addToCart', async (req, res) => {
+      const cartItem = req.body;
+      const result = await myCartDB.insertOne(cartItem);
+      res.send(result)
+    })
 
 
 
@@ -71,10 +93,10 @@ run().catch(console.dir);
 
 
 
-app.get('/',(req, res)=>{
-    res.send('BoroBazar is running')
+app.get('/', (req, res) => {
+  res.send('BoroBazar is running')
 })
 
-app.listen(port,()=>{
-    console.log(`BoroBazar is running on port ${port}`);
+app.listen(port, () => {
+  console.log(`BoroBazar is running on port ${port}`);
 })
